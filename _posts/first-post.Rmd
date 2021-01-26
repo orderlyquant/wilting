@@ -1,0 +1,45 @@
+---
+title: "First post"
+description: |
+  First example post
+author:
+  - name: Brandon Farr 
+date: "2021-01-26"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## package `timetk`
+
+The `timetk` package offers a lot of nice wrapper functions, here is one that is
+useful to create a uniform series of dates
+
+```{r}
+
+library(timetk)
+
+tk_make_timeseries("2010", length_out = 12, by = "year")
+
+```
+
+Note that the `by` argument makes this very flexible
+
+```{r}
+
+tk_make_timeseries("2010", length_out = 12*4, by = "quarter")
+
+```
+
+```{r}
+
+tk_make_timeseries("2010", length_out = 12*12, by = "month")
+
+```
+
+
+
+
+
