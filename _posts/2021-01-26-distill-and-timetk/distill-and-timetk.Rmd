@@ -26,7 +26,7 @@ Today, I worked on the following:
 
 ## Distill blog
 
-Set up this blog using the `distill` package and [github pages](github.pages.io).
+Set up this blog using the `distill` package and [github pages](https://pages.github.com/).
 A few takeaways:
 
 - see [here](https://github.blog/2016-12-09-publishing-with-github-pages-now-as-easy-as-1-2-3/) for details on getting your repo right

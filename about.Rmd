@@ -15,3 +15,8 @@ For reminders on how to:
     - `distill::create_post()` - see help for details
     - importantly, [drafts](https://rstudio.github.io/distill/blog_workflow.html#draft-option)
       are marked in YAML with `draft: true`
+
+## Miscellaneous
+
+- if a link doesn't begin with "http" or "https", it will be interpreted as a relative
+  path...**you've been warned!!!**
