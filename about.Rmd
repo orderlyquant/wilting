@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 For reminders on how to:
 
+- comprehend the [build workflow](https://rstudio.github.io/distill/website.html)
 - create a [post](https://rstudio.github.io/distill/blog_workflow.html)
     - importantly, [drafts](https://rstudio.github.io/distill/blog_workflow.html#draft-option)
       are marked in YAML with `draft: true`
