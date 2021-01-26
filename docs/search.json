@@ -2,24 +2,24 @@
   "articles": [
     {
       "path": "about.html",
-      "title": "About this blog",
-      "description": "References",
+      "title": "References",
+      "description": "Information useful for building and maintaining this blog.",
       "author": [],
-      "contents": "\nFor reminders on how to:\ncomprehend the build workflow\ncreate a post\nimportantly, drafts are marked in YAML with draft: true\n\n",
-      "last_modified": "2021-01-26T15:30:09-05:00"
+      "contents": "\nFor reminders on how to:\ncomprehend the build workflow\ncreate a post\ndistill::create_post() - see help for details\nimportantly, drafts are marked in YAML with draft: true\n\n",
+      "last_modified": "2021-01-26T16:06:54-05:00"
     },
     {
       "path": "index.html",
       "title": "What I Learned Today",
       "author": [],
       "contents": "\n\n\n\n",
-      "last_modified": "2021-01-26T15:21:21-05:00"
+      "last_modified": "2021-01-26T16:06:55-05:00"
     },
     {
       "path": "README.html",
       "author": [],
       "contents": "\nwilting\nMy “(w)hat (I) (l)earned (t)oday” blog\n\n\n",
-      "last_modified": "2021-01-26T15:30:09-05:00"
+      "last_modified": "2021-01-26T16:06:56-05:00"
     }
   ],
   "collections": ["posts/posts.json"]

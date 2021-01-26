@@ -1,7 +1,7 @@
 ---
-title: "About this blog"
+title: "References"
 description: |
-  References
+  Information useful for building and maintaining this blog.
 ---
 
 ```{r setup, include=FALSE}
@@ -12,5 +12,6 @@ For reminders on how to:
 
 - comprehend the [build workflow](https://rstudio.github.io/distill/website.html)
 - create a [post](https://rstudio.github.io/distill/blog_workflow.html)
+    - `distill::create_post()` - see help for details
     - importantly, [drafts](https://rstudio.github.io/distill/blog_workflow.html#draft-option)
       are marked in YAML with `draft: true`
