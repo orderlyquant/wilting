@@ -22,6 +22,7 @@ Today, I worked on the following:
 
 1. setting up this [blog](https://orderlyquant.github.io/wilting)
 2. running through the weekly Free R Tip from [business-science](https://www.business-science.io/)
+3. read through [GIT SQL Together](https://caitlinhudon.com/2018/11/28/git-sql-together/)
 
 ## Distill blog
 
@@ -52,3 +53,12 @@ Note that the `by` argument is very flexible:
   phrases like by = "10 min"
 
 
+## GIT + SQL
+
+1. You will always need that query again, so "GIT" it
+2. Queries change through time, you *may* need a previous version when you realize
+   the *improved* query "broke" something in a way that wasn't immediately obvious
+   - save with a `.sql` extension
+
+Looks like there are other interesting posts from this site. I added one to Notion,
+so it may be covered here someday.
