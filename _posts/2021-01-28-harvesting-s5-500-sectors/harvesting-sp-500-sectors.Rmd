@@ -1,0 +1,145 @@
+---
+title: "Ha`rvest`ing S&P 500 Sectors"
+description: |
+  Using open source data to look at within industry correlations.
+author:
+  - name: Brandon Farr
+    url: {}
+date: 01-28-2021
+categories:
+  - tidyquant
+  - rvest
+  - janitor
+  - finance
+output:
+  distill::distill_article:
+    self_contained: false
+draft: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(tidyverse)  # for tidy/dplyr work
+library(rvest)      # for web-scraping
+
+```
+
+A little work with the `rvest` package. Try to get the current S&P 500
+constituents from Wikipedia.
+
+```{r}
+
+wiki_sp500 <- read_html(
+  "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+)
+
+```
+
+According to my [SelectorGadget](https://rvest.tidyverse.org/articles/articles/selectorgadget.html)
+work, the element I am looking for is "#constituents"
+
+```{r}
+
+wiki_sp500 %>%
+  html_element("#constituents")
+
+```
+
+Since this is a table, it needs to be passed through the `html_table`
+function.
+
+```{r}
+
+sp500_tbl <- wiki_sp500 %>%
+  html_element("#constituents") %>%
+  html_table() %>%
+  janitor::clean_names()
+
+sp500_tbl
+
+```
+
+Wow! Sure enough, we get a tibble with what we want. Notice the use of
+`janitor` to clean up the column names for convenience. *I think I should
+always do this.*
+
+Let's look at all of the stocks in the same `gics_sub_industry` as Apple.
+
+```{r}
+
+aapl_sub_ind <- sp500_tbl %>%
+  filter(symbol == "AAPL") %>%
+  pull(gics_sub_industry)
+
+aapl_peers_tbl <- sp500_tbl %>%
+  filter(gics_sub_industry == aapl_sub_ind) %>%
+  select(symbol, security, matches("^gics"))
+
+aapl_peers_tbl
+
+```
+
+This is a great list to pass to `tidyquant` and try pulling some pricing data.
+
+```{r}
+
+library(tidyquant)
+
+aapl_peers_pricing <- aapl_peers_tbl %>%
+  pull(symbol) %>%
+  tq_get(get = "tiingo")
+
+```
+
+By default, we get about a years worth of prices. Let's calculate returns:
+
+```{r}
+
+aapl_peers_returns <- aapl_peers_pricing %>%
+  group_by(symbol) %>%
+  tq_transmute(adjusted, periodReturn, period = "daily", col_rename = "return")
+
+```
+
+Now, calculate the correlation matrix:
+
+```{r}
+
+aapl_peers_returns %>%
+  
+  # put returns into columns
+  pivot_wider(names_from = symbol, values_from = return) %>%
+  
+  # first day return is 0, so remove row
+  slice(-1) %>%
+  
+  # remove date column, so you can call `cor` on entire tibble
+  select(-date) %>%
+  
+  # calculate correlations
+  cor() %>%
+  
+  # `cor` returns a matrix, convert back into tibble
+  as_tibble(rownames = "symbol_1") %>%
+  
+  # transform into tidy format for easier processing
+  pivot_longer(-1, names_to = "symbol_2", values_to = "cor") %>%
+  
+  # remove the correlations of a stock with itself
+  filter(!(symbol_1 == symbol_2)) %>%
+  
+  # group by symbol_1 and arrange descending by correlation
+  group_by(symbol_1) %>%
+  arrange(desc(cor)) %>%
+  
+  # look at first row in each group == highest correlated stock
+  slice(1)
+
+```
+
+
