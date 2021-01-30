@@ -5,21 +5,21 @@
       "title": "References",
       "description": "Information useful for building and maintaining this blog.",
       "author": [],
-      "contents": "\nFor reminders on how to:\ncomprehend the build workflow\ncreate a post\ndistill::create_post() - see help for details\nimportantly, drafts are marked in YAML with draft: true\n\nMiscellaneous\nif a link doesn’t begin with “http” or “https”, it will be interpreted as a relative path…you’ve been warned!!!\n\n\n\n",
-      "last_modified": "2021-01-26T16:27:57-05:00"
+      "contents": "\nFor reminders on how to:\ncomprehend the build workflow\ncreate a post\ndistill::create_post() - see help for details\nimportantly, drafts are marked in YAML with draft: true\n\nMiscellaneous\nif a link doesn’t begin with “http” or “https”, it will be interpreted as a relative path…you’ve been warned!!!\ncode_folding is nice to have as an option. I prefer it on a per chunk basis, so:\nadd code_folding: true to the YAML see here\nset knitr chunk options: knitr::opts_chunk$set(echo = TRUE, code_folding = FALSE)\nin the chunk where you want code folding, set code_folding=TRUE or code_folding=\"code\" in the chunk header.\n\n",
+      "last_modified": "2021-01-30T13:47:43-05:00"
     },
     {
       "path": "index.html",
       "title": "What I Learned Today",
       "author": [],
       "contents": "\n\n\n\n",
-      "last_modified": "2021-01-26T16:21:13-05:00"
+      "last_modified": "2021-01-30T13:47:44-05:00"
     },
     {
       "path": "README.html",
       "author": [],
       "contents": "\nwilting\nMy “(w)hat (I) (l)earned (t)oday” blog\n\n\n",
-      "last_modified": "2021-01-26T16:27:57-05:00"
+      "last_modified": "2021-01-30T13:47:44-05:00"
     }
   ],
   "collections": ["posts/posts.json"]

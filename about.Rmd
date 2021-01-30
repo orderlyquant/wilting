@@ -20,3 +20,9 @@ For reminders on how to:
 
 - if a link doesn't begin with "http" or "https", it will be interpreted as a relative
   path...**you've been warned!!!**
+- code_folding is nice to have as an option. I prefer it on a per chunk
+  basis, so:
+    - add `code_folding: true` to the YAML see [here](https://rstudio.github.io/distill/#code-folding)
+    - set knitr chunk options: `knitr::opts_chunk$set(echo = TRUE, code_folding = FALSE)`
+    - in the chunk where you want code folding, set `code_folding=TRUE` or
+      `code_folding="code"` in the chunk header.
