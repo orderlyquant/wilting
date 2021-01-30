@@ -18,7 +18,6 @@ output:
 draft: false
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, code_folding = FALSE)
 ```
@@ -252,4 +251,3 @@ aapl_cor_tbl %>%
   guides(col = guide_legend(nrow = 1))
 
 ```
-
