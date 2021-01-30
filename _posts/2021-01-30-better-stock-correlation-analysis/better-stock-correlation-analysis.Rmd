@@ -1,0 +1,256 @@
+---
+title: "Better Stock Correlation Analysis"
+description: |
+  Building on the previous post, with some considerations towards efficiency
+  and increasing depth of analysis.
+author:
+  - name: Brandon Farr
+    url: {}
+date: 01-30-2021
+categories:
+  - tidyquant
+  - tibbletime
+  - finance
+output:
+  distill::distill_article:
+    self_contained: false
+    code_folding: true
+draft: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, code_folding = FALSE)
+```
+
+**Short-comings of previous analysis**
+
+- too many steps to get correlations
+- don't need to calculate all correlation pairs, just pairs including AAPL
+- point-in-time versus evolution of correlation
+- needs a plot, likely interactive (`plotly`)
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+library(tidyverse)  # for tidy/dplyr work
+library(rvest)      # for web-scraping
+library(tidyquant)  # for quant work (tiingo pricing, tq_mutate ...)
+
+# use here::here so that interative and knitting both work without
+# directory issues/ambiguity
+posts_dir <- here::here("_posts/2021-01-30-better-stock-correlation-analysis/")
+```
+
+## API Consideration - repeated pulls
+
+Getting to a completed post is an iterative process, that involves: work,
+knitting the document, assessing the current state, deciding what to add,
+then repeating until the final version. This leads to repetitive pulls
+of the data from Tiingo. So, I begin by executing a single pull and storing
+it, so that we avoid this repetition.
+
+Run this chunk once while working on the post, then set chunk options
+to `eval=FALSE` and `echo=TRUE` so that the code displays, but is not
+executed.
+
+```{r eval=FALSE, echo=TRUE}
+# create S&P 500 constituent table
+sp500_tbl <- read_html(
+  "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
+) %>%
+  html_element("#constituents") %>%
+  html_table() %>%
+  janitor::clean_names()
+
+write_csv(
+  sp500_tbl,
+  fs::path(posts_dir, "sp500.csv")
+)
+
+# create AAPL peer pricing table
+peer_pricing_tbl <- sp500_tbl %>%
+  filter(
+    gics_sub_industry == sp500_tbl %>% filter(symbol == "AAPL") %>% pull(gics_sub_industry)
+  ) %>%
+  pull(symbol) %>%
+  tq_get(.x, get = "tiingo")
+
+write_csv(peer_pricing_tbl, fs::path(posts_dir, "peer_pricing.csv"))
+```
+
+Once this chunk has been run successfully, just load the data from the local
+csv`s: `sp500.csv` and `peer_pricing.csv`.
+
+```{r load-local-data}
+
+sp500_tbl <- read_csv(fs::path(posts_dir, "sp500.csv"))
+peer_pricing_tbl <- read_csv(fs::path(posts_dir, "peer_pricing.csv"))
+
+glimpse(sp500_tbl)
+glimpse(peer_pricing_tbl)
+
+# calculate returns as well
+peer_returns_tbl <- peer_pricing_tbl %>%
+  group_by(symbol) %>%
+  tq_transmute(adjusted, periodReturn, period = "daily", col_rename = "return")
+
+```
+
+## Fewer steps, fewer pairs
+
+Build a table with AAPL as `symbol_1` and peer stocks as `symbol_2`, using
+the fact that `left_join` will create 1-row for every match of date. This
+is a succinct way of creating all return pairs.
+
+```{r}
+
+aapl_peer_returns_tbl <-
+  peer_returns_tbl %>%
+    filter(symbol == "AAPL") %>%
+    select(symbol, date, return) %>%
+  left_join(
+    peer_returns_tbl %>%
+      filter(symbol != "AAPL") %>%
+      select(symbol, date, return),
+    by = "date",
+    suffix = c("_1", "_2")
+  ) %>%
+  select(date, matches("symbol"), everything()) %>%
+  arrange(symbol_2, date) %>%
+  filter(!(return_1 == 0 & return_2 == 0))  # remove days where returns == 0
+
+glimpse(aapl_peer_returns_tbl)
+
+```
+
+Now, calculating correlations is simple via a single `summarize` call. *Note:
+the `use` parameter of `cor` is left as the default "everything" which will
+cause `NA` to appear if there are any data issues. This is preferable to just
+returning a result, as we don't have any data robustness built into the data
+pipeline.*
+
+```{r}
+aapl_peer_returns_tbl %>%
+  group_by(symbol_2) %>%
+  summarize(
+    cor = cor(return_1, return_2)
+  )
+
+```
+
+It can be seen that we are getting the same results with less effort, e.g.
+no `pivot`ing when comparing the above to the results shown below.
+
+```{r}
+
+peer_returns_tbl %>% 
+  
+  # put returns into columns
+  pivot_wider(names_from = symbol, values_from = return) %>%
+  
+  # first day return is 0, so remove row
+  slice(-1) %>%
+  
+  # remove date column, so you can call `cor` on entire tibble
+  select(-date) %>%
+  
+  # calculate correlations
+  cor() %>%
+  
+  # `cor` returns a matrix, convert back into tibble
+  as_tibble(rownames = "symbol_1") %>%
+  
+  # transform into tidy format for easier processing
+  pivot_longer(-1, names_to = "symbol_2", values_to = "cor") %>%
+  
+  # remove the correlations of a stock with itself
+  filter(!(symbol_1 == symbol_2)) %>%
+  
+  # group by symbol_1 and arrange descending by correlation
+  group_by(symbol_1) %>%
+  arrange(desc(cor)) %>%
+  
+  # look at first row in each group == highest correlated stock
+  slice(1)
+
+```
+
+## Correlation evolution
+
+The above analysis produces a single estimate of correlation using all of the
+data in the dataset. Since the purpose of calculating these correlations is
+to find a substitute security for a short time frame, 30 days, it is probably
+better to have a sense of how stable the relationship between the two stocks
+is through time.
+
+For this, we will use the `rollify` function from the `tibbletime` package.
+Using the examples given in the
+[documentation](https://business-science.github.io/tibbletime/reference/rollify.html) 
+makes this relatively simple
+
+```{r}
+
+library(tibbletime)
+
+cor_roll <- rollify(~cor(.x, .y), window = 30)
+
+aapl_cor_tbl <-
+  aapl_peer_returns_tbl %>%
+  group_by(symbol_2) %>%
+  mutate(cor = cor_roll(return_1, return_2))
+
+
+```
+
+`tibbletime` really is a great convenience.
+
+Notice how the correlations are noisy (expected), but have in general declined
+significantly (unexpected).
+
+```{r}
+
+aapl_cor_tbl %>%
+  ggplot(aes(x = date, y = cor, color = symbol_2)) +
+  geom_hline(yintercept = 0, color = "gray40") +
+  geom_line() +
+  ylim(-1, 1) +
+  labs(
+    title = "AAPL Stock Correlation",
+    subtitle = "with GICS sub-industry peers",
+    caption = "30-trading day rolling windows",
+    x = NULL, y = NULL, color = NULL
+  ) +
+  theme_tq() +
+  scale_color_tq() +
+  # for legend to have 1 row
+  guides(col = guide_legend(nrow = 1))
+
+
+```
+
+
+A smoothed version makes this trend a little clearer.
+
+```{r, echo=FALSE, code_folding="code"}
+
+aapl_cor_tbl %>%
+  ggplot(aes(x = date, y = cor, color = symbol_2)) +
+  geom_hline(yintercept = 0, color = "gray40") +
+  geom_smooth() + # default loess smoothing
+  
+  # gam smoothing
+  # geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs")) +
+  ylim(-1, 1) +
+  labs(
+    title = "AAPL Stock Correlation",
+    subtitle = "with GICS sub-industry peers",
+    caption = "30-trading day rolling windows",
+    x = NULL, y = NULL, color = NULL
+  ) +
+  theme_tq() +
+  scale_color_tq() +
+  # for legend to have 1 row
+  guides(col = guide_legend(nrow = 1))
+
+```
+
