@@ -148,7 +148,7 @@ usethis::pr_init("dev_branch")
 # 3. pull changes from upstream
 usethis::pr_merge_main()
 
-# 4. initial pull request
+# 4. initiate pull request
 usethis::pr_push()
 
 # 5. clean up after pull request has been accepted and merged
