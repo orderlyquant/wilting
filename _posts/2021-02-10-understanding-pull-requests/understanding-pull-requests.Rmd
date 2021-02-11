@@ -143,10 +143,10 @@ usethis::create_from_github("OWNER/repo", "local_dir", fork = TRUE)
 # 2. create development branch
 usethis::pr_init("dev_branch")
 
+# do all development work, committing locally on local/dev_branch
+
 # 3. pull changes from upstream
 usethis::pr_merge_main()
-
-# do all development work, committing locally on local/dev_branch
 
 # 4. initial pull request
 usethis::pr_push()
